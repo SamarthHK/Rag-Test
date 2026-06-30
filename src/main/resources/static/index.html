@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Rag Text</title>
 
-    <!-- Bebas Neue font -->
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+
+    <!-- Markdown parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
         body {
@@ -25,10 +28,6 @@
             font-size: 64px;
             margin-top: 40px;
             letter-spacing: 2px;
-        }
-
-        .title span {
-            font-weight: bold;
         }
 
         .input-row {
@@ -73,16 +72,50 @@
             fill: white;
         }
 
+        /* ✅ IMPROVED OUTPUT BOX */
         .output-box {
             margin-top: 30px;
-            width: 470px;
+            width: min(850px, 92vw);
             min-height: 200px;
+            max-height: 70vh;
+            overflow-y: auto;
+
             background: #161a22;
             border: 1px solid #2a2f3a;
             border-radius: 10px;
-            padding: 15px;
-            white-space: pre-wrap;
+            padding: 18px;
+            line-height: 1.5;
         }
+
+        /* Markdown styling */
+        .output-box h1,
+        .output-box h2,
+        .output-box h3 {
+            margin-top: 12px;
+        }
+
+        .output-box p {
+            margin: 8px 0;
+        }
+
+        .output-box code {
+            background: #0d1117;
+            padding: 2px 5px;
+            border-radius: 5px;
+        }
+
+        .output-box pre {
+            background: #0d1117;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .output-box ul {
+            padding-left: 20px;
+        }
+
+        /* Spinner */
         .spinner-container {
             display: flex;
             justify-content: center;
@@ -100,12 +133,8 @@
         }
 
         @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -113,14 +142,13 @@
 <body>
 
 <div class="title">
-    <span>RAG TEST</span>
+    RAG TEST
 </div>
 
 <div class="input-row">
     <input class="prompt-box" id="prompt" placeholder="Enter your prompt..." />
 
     <button class="spy-btn" onclick="submitPrompt()">
-        <!-- spyglass icon -->
         <svg viewBox="0 0 24 24">
             <path d="M10 2a8 8 0 105.293 14.293l4.707 4.707 1.414-1.414-4.707-4.707A8 8 0 0010 2zm0 2a6 6 0 110 12 6 6 0 010-12z"/>
         </svg>
@@ -141,7 +169,7 @@
             return;
         }
 
-        // Spinner while waiting
+        // Loading spinner
         output.innerHTML = `
             <div class="spinner-container">
                 <div class="spinner"></div>
@@ -154,9 +182,7 @@
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({
-                    prompt: prompt
-                })
+                body: JSON.stringify({ prompt })
             });
 
             if (!response.ok) {
@@ -165,11 +191,10 @@
 
             const data = await response.json();
 
-            // Assuming the response looks like:
-            // { "response": "some text" }
-            output.textContent = data.response;
-        }
-        catch (err) {
+            // ✅ Markdown rendering
+            output.innerHTML = marked.parse(data.response);
+
+        } catch (err) {
             output.textContent = "Error:\n\n" + err.message;
         }
     }
